@@ -57,7 +57,7 @@
             <div class="col-6 col-sm-3 mt-5">
                 <div class="row mt-5">
                     <div class="col-md-12 text-center">
-                        <a href="{{ secure_url('/') }}"><img src="{{asset('public/front/images/logos/logo2.png')}}" class="img-130x32" alt="logo"></a>
+                        <a href="{{ secure_url('/') }}"><img src="{{$logo ?? ''}}" class="img-130x32" alt="logo"></a>
                     </div>
                 </div>
 

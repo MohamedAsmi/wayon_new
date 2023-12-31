@@ -288,15 +288,18 @@ class EmailController extends Controller
         $data['content']        =   $content = $body_string;
         $data['message_body']   =   $content;
 
-        if(env('APP_MODE', '') != 'test'){
+
+        // if(env('APP_MODE', '') != 'test'){
              if($emailConfig['driver']=='smtp' && $emailConfig['email_status']==1){
+                //  dd(1230);
                 Mail::send('emails.email_confirm', $data, function($message) use($user) {
                 $message->to($user->email, $user->first_name)->subject('Please confirm your e-mail address');
             });
-            }else if($emailConfig['driver']=='sendmail'){
+            }else if($emailConfig['driver']=='smtp'){
+                // dd(123);
               $this->sendPhpEmail($data,$emailConfig);
             }
-        }
+        // }
 
         return true;
     }
@@ -492,7 +495,6 @@ class EmailController extends Controller
 
     public function booking_user($booking_id, $checkinDate)
     {
-
         $emailSettings   = Settings::getAll()->where('type', 'email')->toArray();
         $emailConfig     = $this->helper->key_value('name', 'value', $emailSettings);
         $adminDetails    = Admin::where('status', 'active')->first();
@@ -827,19 +829,20 @@ class EmailController extends Controller
 
     public function sendPhpEmail($data, $configEmail)
     {
-        // dd($configEmail);
+        // dd($data);
 
         $phpmailer = new PHPMailer(true);
         $phpmailer->isSMTP();
         $phpmailer->Host = 'mail.getin1click.com';
-        $phpmailer->Port = 465;
-        $phpmailer->SMTPSecure = 'ssl';
+        $phpmailer->Port = 587;
+        $phpmailer->SMTPSecure = 'tls';
         $phpmailer->SMTPAuth = true;
         $phpmailer->Username = 'wayon@getin1click.com';
-        $phpmailer->Password = 'XT$1~By5Nxj3';
-
-        $phpmailer->setFrom($configEmail['email_address'], $configEmail['from_name']);
-        $phpmailer->addAddress($data['email'], $data['first_name']);
+        $phpmailer->Password = '!Kepv-&$O-3V';
+         $phpmailer->setFrom('shamsudeenasmi96@gmail.com', 'Mohamed Asmi');
+        $phpmailer->addAddress('shamsudeenasmi96@gmail.com', 'Mohamed Asmi');
+        // $phpmailer->setFrom($configEmail['from_address'], $configEmail['from_name']);
+        // $phpmailer->addAddress($data['email'], $data['first_name']);
         $phpmailer->Subject = $data['subject'];
         $link            = isset($data['link']) ? $data['link'] : '' ;
         $lang            = isset($data['link_text']) ? $data['link_text'] : '';
@@ -888,7 +891,7 @@ class EmailController extends Controller
 
         $data['view']       = resource_path('views/sendmail/booking.blade.php');
 
-        $data['link']       = $data['url'].'admin/bookings/detail/'.$data['result']['id'];
+        $data['link']       = $data['url'].'admin/bookings/accept/'.$data['result']['id'];
         $data['link_text']  = trans('messages.email_template.accept/decline');
         $data['user_name']  = $data['result']['users']['first_name'];
         $data['first_name'] = $receiver['name'];

@@ -22,6 +22,7 @@ use App\Models\{
     Settings,
     Payment,
     Photo,
+    User,
     Withdraw,
     Messages,
     Wallet,
@@ -608,6 +609,8 @@ class PaymentController extends Controller
     {
         // dd($data);
         
+        $property_id = properties::find($data->property_id);
+        // dd($property_id->booking_type);
         $price_list = (object)$data->price_list;
         $currencyDefault = Currency::getAll()->where('default', 1)->first();
         $booking = new Bookings;
@@ -643,7 +646,9 @@ class PaymentController extends Controller
         $booking->cancellation      = Properties::find($data->property_id)->cancellation;
         if($data->paymode == 'Bank') {
             $booking->status            = 'Pending';
-        } else {
+        }else if ($property_id->booking_type == 'instant'){
+            $booking->status = 'Accepted';
+        }else{
             $booking->status            = (Session::get('payment_booking_type') == 'instant') ? 'Accepted' : 'Pending';
         }
         
@@ -745,22 +750,27 @@ class PaymentController extends Controller
         $message->type_id        = 4;
         $message->read           = 0;
         $message->save();
-
         $email_controller = new EmailController;
-        $email_controller->booking($booking->id, $checkinDate);
-        $email_controller->booking_user($booking->id, $checkinDate);
+         
+        if ($property_id->booking_type != 'instant'){
+           
+            $email_controller->booking($booking->id, $checkinDate);
+            $email_controller->booking_user($booking->id, $checkinDate);
+        }
+     
 
         if($booking->booking_type == "instant" || $booking->booking_type == "request" && $data->paymode == 'Bank' || $data->paymode == '') {
             $email_controller->bankAdminNotify($booking->id, $checkinDate);
         }
-
+        $user = User::find($data->user_id);
+        // dd($user);
         if ($booking->status =='Accepted') {
             $companyName = Settings::getAll()->where('type', 'general')->where('name', 'name')->first()->value;
             $instantBookingConfirm = ($companyName.': ' .'Your booking is confirmed from'.' '. $booking->start_date.' '.'to'.' '.$booking->end_date );
             $instantBookingPaymentConfirm =($companyName.' ' .'Your payment is completed for'.' '.$booking->properties->name);
-
-            twilioSendSms(Auth::user()->formatted_phone, $instantBookingConfirm);
-            twilioSendSms(Auth::user()->formatted_phone, $instantBookingPaymentConfirm);
+        
+            twilioSendSms($user->formatted_phone, $instantBookingConfirm);
+            twilioSendSms($user->formatted_phone, $instantBookingPaymentConfirm);
 
         } else {
             twilioSendSms($data->phone, 'Your booking is initiated, Wait for confirmation');

@@ -1940,7 +1940,7 @@ function price_calculation(checkin, checkout, guest){
 				}
 
 				var host = "{{ ($result->host_id == @Auth::guard('users')->user()->id) ? '1' : '' }}";
-				if(host == '1') $('.book_btn').addClass('d-none');
+				// if(host == '1') $('.book_btn').addClass('d-none');
 			},
 			error: function (request, error) {
 				// This callback function will trigger on unsuccessful action

@@ -114,6 +114,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => ['gue
 	Route::get('bookings/customer_search', 'BookingsController@searchCustomer')->middleware(['permission:manage_bookings']);
 	//booking details
 	Route::get('bookings/detail/{id}', 'BookingsController@details')->middleware(['permission:manage_bookings']);
+	
+	Route::get('bookings/accept/{id}', 'BookingsController@accept')->middleware(['permission:manage_bookings']);
+	
 	Route::get('bookings/edit/{req}/{id}', 'BookingsController@updateBookingStatus')->middleware(['permission:manage_bookings']);
 	Route::post('bookings/pay', 'BookingsController@pay')->middleware(['permission:manage_bookings']);
 	Route::get('booking/need_pay_account/{id}/{type}', 'BookingsController@needPayAccount');

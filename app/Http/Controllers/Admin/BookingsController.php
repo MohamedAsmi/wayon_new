@@ -188,6 +188,68 @@ class BookingsController extends Controller
 
         return view('admin.bookings.detail', $data);
     }
+    
+    public function accept(Request $request, EmailController $email,$id)
+    {
+        // dd($id);
+        $booking = Bookings::find($id);
+
+        // $penalty = Penalty::where('user_id', Auth::user()->id)->where('remaining_penalty', '!=', 0)->get();
+        // if($penalty){
+        //     $penalty_result = $this->helper->host_penalty_check($penalty, $booking->host_payout, $booking->currency_code);
+        // }
+        
+
+        $booking->status            = 'Accepted';
+        $booking->accepted_at       = date('Y-m-d H:i:s');
+        $booking->save();
+
+        // $payouts = new Payouts;
+        // $payouts->booking_id     = $id;
+        // $payouts->property_id    = $booking->property_id;
+        // $payouts->user_id        = $booking->host_id;
+        // $payouts->user_type      = 'host';
+        // $payouts->amount         = $penalty_result['host_amount'] ?? 0;
+        // $payouts->penalty_amount = $penalty_result['penalty_total']??'';
+        // $payouts->currency_code  = $booking->currency_code;
+        // $payouts->status         = 'Future';
+        // $payouts->save();
+
+        // $panalty_ids = explode(',', $penalty_result['penalty_ids']);
+        // $panalty_amounts = explode(',', $penalty_result['panalty_amounts']);
+
+        // for ($i=0; $i < count($panalty_ids); $i++) {
+        //     if ($panalty_ids[$i] != '' && $panalty_amounts[$i] != '') {
+        //         $payout_penalties = new PayoutPenalties;
+        //         $payout_penalties->payout_id  = $payouts->id;
+        //         $payout_penalties->penalty_id = $panalty_ids[$i];
+        //         $payout_penalties->amount     = $panalty_amounts[$i];
+        //         $payout_penalties->save();
+        //     }
+        // }
+
+        if(!empty($request->message)) {
+            $messages = new Messages;
+            $messages->property_id    = $booking->property_id;
+            $messages->booking_id     = $booking->id;
+            $messages->receiver_id    = $booking->user_id;
+            $messages->sender_id      = Auth::user()->id;
+            $messages->message        = $request->message;
+            $messages->type_id        = 5;
+            $messages->save();
+        }
+
+        $status = 'Accepted';
+        $email->bookingAcceptedOrDeclined($request->id, $status);
+
+        $companyName = Settings::getAll()->where('type', 'general')->where('name', 'name')->first()->value;
+        $requestBookingConfirm = ($companyName.': ' .'Your booking request for'.' '.$booking->properties->name .' '.'is Accepted, Please Payment for booking.');
+
+       twilioSendSms($booking->users->formatted_phone, $requestBookingConfirm);
+
+        $this->helper->one_time_message('success', trans('messages.success.booking_accept_success'));
+        return redirect('admin/bookings/detail/'.$id);
+    }
 
     public function pay(Request $request)
     {
